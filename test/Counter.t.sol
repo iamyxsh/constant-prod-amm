@@ -2,23 +2,33 @@
 pragma solidity ^0.8.13;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {CPAMM} from "../src/Counter.sol";
+import "forge-std/console.sol";
+
+import {CPAMM} from "../src/CPAMM.sol";
+import {TokenA} from "../src/mocks/TokenA.sol";
+import {TokenB} from "../src//mocks/TokenB.sol";
 
 contract CPAMMTest is Test {
-    CPAMM public counter;
+    CPAMM public cpamm;
+    TokenA public tokenA;
+    TokenB public tokenB;
+
+    uint initBalance = 1000000000000000000000000;
 
     function setUp() public {
-        counter = new CPAMM();
-        counter.setNumber(0);
+        tokenA = new TokenA();
+        tokenB = new TokenB();
+        cpamm = new CPAMM(address(tokenA), address(tokenB));
+
+        tokenA.approveSpender(address(cpamm), initBalance);
+        tokenB.approveSpender(address(cpamm), initBalance);
+
+        cpamm.addLiquid(100, 100);
     }
 
-    function test_Increment() public {
-        counter.increment();
-        assertEq(counter.number(), 1);
-    }
+    function test_Swap() public {
+        cpamm.swap(address(tokenA), 10);
 
-    function testFuzz_SetNumber(uint256 x) public {
-        counter.setNumber(x);
-        assertEq(counter.number(), x);
+        assertEq(tokenA.balanceOf(address(this)), initBalance - 10);
     }
 }
